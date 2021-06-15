@@ -5,10 +5,13 @@ import dev.ruffrick.dicebot.command.CommandScope
 import dev.ruffrick.dicebot.command.SlashCommand
 import dev.ruffrick.dicebot.event.AbstractListener
 import dev.ruffrick.dicebot.util.embed.DefaultEmbedBuilder
+import dev.ruffrick.dicebot.util.extension.*
 import dev.ruffrick.dicebot.util.logging.logger
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.interactions.commands.OptionType
 import org.springframework.stereotype.Component
+import kotlin.reflect.full.callSuspend
 import kotlin.system.measureTimeMillis
 
 @Component
@@ -37,12 +40,39 @@ class SlashCommandListener(
             CommandScope.BOTH -> if (event.isFromGuild && !hasRequiredPermissions(command, event)) return
         }
 
+        var node = commandRegistry.root.children[event.name]
+            ?: throw IllegalStateException("Invalid command: name='${event.name}'")
+        if (event.subcommandGroup != null) {
+            node = node.children[event.subcommandGroup]!!
+        }
+        if (event.subcommandName != null) {
+            node = node.children[event.subcommandName]!!
+        }
+
+        val args = mutableListOf<Any?>()
+        node.args!!.forEach { (name, type) ->
+            when (type) {
+                OptionType.STRING -> args.add(event.getStringOrNull(name))
+                OptionType.INTEGER -> args.add(event.getLongOrNull(name))
+                OptionType.BOOLEAN -> args.add(event.getBooleanOrNull(name))
+                OptionType.USER -> args.add(event.getUserOrNull(name))
+                OptionType.CHANNEL -> args.add(event.getChannelOrNull(name))
+                OptionType.ROLE -> args.add(event.getRoleOrNull(name))
+                else -> throw IllegalArgumentException("Invalid option: type='$type'")
+            }
+        }
+
         val duration = measureTimeMillis {
-            command.execute(event)
+            val function = node.function!!
+            if (function.isSuspend) {
+                function.callSuspend(command, event, *args.toTypedArray())
+            } else {
+                function.call(command, event, *args.toTypedArray())
+            }
         }
         log.info(
             "Executed command: " +
-                    "name='${command.name}', " +
+                    "name='${command.commandData.name}', " +
                     "userId='${event.user.id}', " +
                     "guildId='${event.guild?.id ?: -1}', " +
                     "durationMs='$duration'"
