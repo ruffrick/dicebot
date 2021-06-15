@@ -1,8 +1,8 @@
 package dev.ruffrick.dicebot.event.command
 
-import dev.ruffrick.dicebot.command.SlashCommand
 import dev.ruffrick.dicebot.command.CommandRegistry
 import dev.ruffrick.dicebot.command.CommandScope
+import dev.ruffrick.dicebot.command.SlashCommand
 import dev.ruffrick.dicebot.event.AbstractListener
 import dev.ruffrick.dicebot.util.embed.DefaultEmbedBuilder
 import dev.ruffrick.dicebot.util.extension.*
@@ -63,7 +63,12 @@ class SlashCommandListener(
         }
 
         val duration = measureTimeMillis {
-            node.function!!.callSuspend(command, event, *args.toTypedArray())
+            val function = node.function!!
+            if (function.isSuspend) {
+                function.callSuspend(command, event, *args.toTypedArray())
+            } else {
+                function.call(command, event, *args.toTypedArray())
+            }
         }
         log.info(
             "Executed command: " +
