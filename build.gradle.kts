@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     // https://plugins.gradle.org/plugin/org.springframework.boot
-    id("org.springframework.boot") version "2.5.0"
+    id("org.springframework.boot") version "2.5.1"
 
     // https://plugins.gradle.org/plugin/org.jetbrains.kotlin.jvm
     kotlin("jvm") version "1.5.10"
@@ -40,7 +40,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator:2.5.1")
 
     // https://github.com/DV8FromTheWorld/JDA/
-    implementation("net.dv8tion:JDA:4.3.0_277") {
+    implementation("net.dv8tion:JDA:4.3.0_278") {
         exclude("opus-java")
     }
 
@@ -51,7 +51,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.14.1")
 
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-configuration-processor
-    kapt("org.springframework.boot:spring-boot-configuration-processor:2.5.0")
+    kapt("org.springframework.boot:spring-boot-configuration-processor:2.5.1")
 }
 
 tasks.withType<KotlinCompile> {
