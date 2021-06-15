@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.GuildChannel
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
@@ -111,17 +112,21 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
         function.parameters.forEach { parameter ->
             val classifier = parameter.type.classifier
             when {
-                //parameter.index == 0 -> require(classifier == command::class)
-                //parameter.index == 1 -> require(classifier == SlashCommandEvent::class) {
-                //    "Illegal argument: First parameter of function ${function.name} in class " +
-                //            "${command::class.simpleName} must be of type SlashCommandEvent but is of type " +
-                //            "${(classifier as KClass<*>).simpleName}!"
-                //}
-                //parameter.index > 1 -> require(classifier != SlashCommandEvent::class) {
-                //    "Parameter ${parameter.name} in function ${function.name} in class " +
-                //            "${command::class.simpleName} must not be of type SlashCommandEvent!"
-                //}
-                parameter.hasAnnotation<CommandOption>() -> {
+                parameter.index == 0 -> require(classifier == command::class) { "How did we get here?" }
+                parameter.index == 1 -> require(classifier == SlashCommandEvent::class) {
+                    "Illegal argument: First parameter of function ${function.name} in class " +
+                            "${command::class.simpleName} must be of type SlashCommandEvent but is of type " +
+                            "${(classifier as KClass<*>).simpleName}!"
+                }
+                parameter.index > 1 -> {
+                    require(classifier != SlashCommandEvent::class) {
+                        "Parameter ${parameter.name} in function ${function.name} in class " +
+                                "${command::class.simpleName} must not be of type SlashCommandEvent!"
+                    }
+                    require(parameter.hasAnnotation<CommandOption>()) {
+                        "Parameter ${parameter.name} in function ${function.name} in class " +
+                                "${command::class.simpleName} must be annotated with @CommandOption!"
+                    }
                     val type = optionTypes[classifier] ?: throw IllegalArgumentException(
                         "Parameter ${parameter.name} in function ${function.name} in class " +
                                 "${command::class.simpleName} must not be of type " +
@@ -132,10 +137,6 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
                         OptionData(type, name, getDescription("$root.$name"), !parameter.type.isMarkedNullable)
                     )
                 }
-                //else -> throw IllegalArgumentException(
-                //    "Illegal argument: Parameter ${parameter.name} in function ${function.name} in class " +
-                //            "${command::class.simpleName} must be annotated as @CommandOption!"
-                //)
             }
         }
         return options
