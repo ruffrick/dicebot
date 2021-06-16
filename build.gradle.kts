@@ -12,6 +12,9 @@ plugins {
 
     // https://plugins.gradle.org/plugin/org.jetbrains.kotlin.kapt
     kotlin("kapt") version "1.5.10"
+
+    // https://plugins.gradle.org/plugin/org.jetbrains.kotlin.plugin.serialization
+    kotlin("plugin.serialization") version "1.5.10"
 }
 
 group = "dev.ruffrick"
@@ -32,6 +35,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
+
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
     implementation("org.springframework.boot:spring-boot-starter-web:2.5.1")

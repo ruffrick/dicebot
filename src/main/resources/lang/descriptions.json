@@ -1,0 +1,8 @@
+{
+  "roll": "Roll some dice",
+  "roll.dice": "The amount and type of dice to roll",
+  "roll.modifier": "The modifier to add to your result",
+  "roll.gm": "Whether to roll as the game master or not",
+  "help": "Display some information on how to use the bot",
+  "help.command": "The command to view help for"
+}

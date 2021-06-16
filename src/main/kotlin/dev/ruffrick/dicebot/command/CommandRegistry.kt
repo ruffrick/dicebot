@@ -1,6 +1,8 @@
 package dev.ruffrick.dicebot.command
 
 import dev.ruffrick.dicebot.util.logging.logger
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.GuildChannel
 import net.dv8tion.jda.api.entities.Role
@@ -23,6 +25,10 @@ import kotlin.reflect.full.memberFunctions
 class CommandRegistry(private val commands: List<SlashCommand>) {
 
     private val log = logger<CommandRegistry>()
+    private val descriptions = Json.decodeFromString<Map<String, String>>(
+        this::class.java.getResourceAsStream("/lang/descriptions.json")?.bufferedReader()?.readText()
+            ?: throw IllegalArgumentException("Missing resource: path='/lang/descriptions.json'")
+    )
     private val optionTypes = mapOf(
         String::class to OptionType.STRING,
         Long::class to OptionType.INTEGER,
@@ -104,7 +110,7 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
     }
 
     private fun getDescription(key: String): String {
-        return key
+        return descriptions[key] ?: throw IllegalArgumentException("Missing description: key='$key'")
     }
 
     private fun parseOptions(function: KFunction<*>, command: SlashCommand, root: String): List<OptionData> {
