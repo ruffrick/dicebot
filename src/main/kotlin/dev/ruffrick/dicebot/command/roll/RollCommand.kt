@@ -2,13 +2,17 @@ package dev.ruffrick.dicebot.command.roll
 
 import dev.ruffrick.dicebot.command.*
 import dev.ruffrick.dicebot.util.embed.DefaultEmbedBuilder
+import net.dv8tion.jda.api.entities.Emoji
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
+import net.dv8tion.jda.api.interactions.components.Button
 import kotlin.random.Random
 
 @Command(category = CommandCategory.ROLL)
 class RollCommand : SlashCommand() {
 
     private val pattern = Regex("^(\\d*)[dD](\\d+)\$").toPattern()
+    private val rolls = mutableMapOf<Long, Roll>()
 
     @BaseCommand
     suspend fun roll(
@@ -19,7 +23,12 @@ class RollCommand : SlashCommand() {
     ) {
         try {
             val roll = parse(dice, modifier, gm)
+            rolls[event.user.idLong] = roll
             event.replyEmbeds(DefaultEmbedBuilder().setDescription("\uD83C\uDFB2 $roll").build())
+                .addActionRow(
+                    Button.secondary("${commandData.name}.reroll.${event.user.idLong}", "Reroll")
+                        .withEmoji(Emoji.fromUnicode("\uD83C\uDFB2"))
+                )
                 .setEphemeral(roll.gm)
                 .queue()
         } catch (e: IllegalArgumentException) {
@@ -27,6 +36,18 @@ class RollCommand : SlashCommand() {
                 .setEphemeral(true)
                 .queue()
         }
+    }
+
+    @CommandButton(private = true)
+    suspend fun reroll(event: ButtonClickEvent, userId: Long) {
+        val roll = rolls[userId] ?: throw IllegalStateException("No previous roll for user: userId='$userId'")
+        event.replyEmbeds(DefaultEmbedBuilder().setDescription("\uD83C\uDFB2 $roll").build())
+            .addActionRow(
+                Button.secondary("${commandData.name}.reroll.$userId", "Reroll")
+                    .withEmoji(Emoji.fromUnicode("\uD83C\uDFB2"))
+            )
+            .setEphemeral(roll.gm)
+            .queue()
     }
 
     private fun parse(dice: String, modifier: Long?, gm: Boolean?): Roll {

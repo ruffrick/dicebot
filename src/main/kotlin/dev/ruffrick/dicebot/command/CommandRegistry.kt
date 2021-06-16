@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.GuildChannel
 import net.dv8tion.jda.api.entities.Role
 import net.dv8tion.jda.api.entities.User
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
@@ -41,6 +42,7 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
     final val byName = mutableMapOf<String, SlashCommand>()
     final val byCategory = mutableMapOf<CommandCategory, MutableList<SlashCommand>>()
     final val byKey = mutableMapOf<String, Pair<KFunction<*>, List<Pair<String, OptionType>>>>()
+    final val buttons = mutableMapOf<String, Pair<KFunction<*>, Boolean>>()
 
     init {
         commands.forEach {
@@ -94,6 +96,27 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
                             }
                         }
                     }
+                    function.hasAnnotation<CommandButton>() -> {
+                        require(function.parameters.size == 3) {
+                            "Function ${function.name} in class ${it::class.simpleName} must have 2 arguments of " +
+                                    "type (ButtonClickEvent, Long)!"
+                        }
+                        val classifier1 = function.parameters[1].type.classifier
+                        require(classifier1 == ButtonClickEvent::class) {
+                            "Parameter ${function.parameters[1].name} in function ${function.name} in class " +
+                                    "${it::class.simpleName} must be of type ButtonClickEvent but is of type " +
+                                    "${(classifier1 as KClass<*>).simpleName}!"
+                        }
+                        val classifier2 = function.parameters[2].type.classifier
+                        require(classifier2 == Long::class) {
+                            "Parameter ${function.parameters[2].name} in function ${function.name} in class " +
+                                    "${it::class.simpleName} must be of type Long but is of type " +
+                                    "${(classifier2 as KClass<*>).simpleName}!"
+                        }
+                        val commandButton = function.findAnnotation<CommandButton>()!!
+                        val id = commandButton.id.ifEmpty { function.name.lowercase() }
+                        buttons["$commandName.$id"] = function to commandButton.private
+                    }
                 }
             }
             if (subcommandGroups.isNotEmpty()) commandData.addSubcommandGroups(subcommandGroups)
@@ -104,7 +127,7 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
             byCategory.getOrPut(it.category) { mutableListOf() }.add(it)
         }
 
-        log.info("Registered ${commands.size} commands")
+        log.info("Registered ${commands.size} commands and ${buttons.size} buttons")
     }
 
     private fun getDescription(key: String): String {
@@ -118,8 +141,8 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
             when {
                 parameter.index == 0 -> require(classifier == command::class) { "How did we get here?" }
                 parameter.index == 1 -> require(classifier == SlashCommandEvent::class) {
-                    "First parameter in function ${function.name} in class ${command::class.simpleName} must be of " +
-                            "type SlashCommandEvent but is of type ${(classifier as KClass<*>).simpleName}!"
+                    "Parameter ${parameter.name} in function ${function.name} in class ${command::class.simpleName} " +
+                            "must be of type SlashCommandEvent but is of type ${(classifier as KClass<*>).simpleName}!"
                 }
                 parameter.index > 1 -> {
                     val commandOption = requireNotNull(parameter.findAnnotation<CommandOption>()) {

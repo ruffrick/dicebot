@@ -29,3 +29,10 @@ annotation class Subcommand(
 annotation class CommandOption(
     val name: String = ""
 )
+
+@Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FUNCTION)
+annotation class CommandButton(
+    val id: String = "",
+    val private: Boolean = false
+)
