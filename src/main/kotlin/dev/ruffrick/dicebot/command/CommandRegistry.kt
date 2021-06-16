@@ -40,8 +40,7 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
 
     final val byName = mutableMapOf<String, SlashCommand>()
     final val byCategory = mutableMapOf<CommandCategory, MutableList<SlashCommand>>()
-
-    final val root = CommandNode()
+    final val byKey = mutableMapOf<String, Pair<KFunction<*>, List<Pair<String, OptionType>>>>()
 
     init {
         commands.forEach {
@@ -62,17 +61,18 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
                     function.hasAnnotation<BaseCommand>() -> {
                         val options = parseOptions(function, it, commandData.name)
                         commandData.addOptions(options)
-                        root.children[commandName] = CommandNode(function, options.associate { optionData ->
+                        byKey[commandName] = function to options.map { optionData ->
                             optionData.name to optionData.type
-                        })
+                        }
                     }
                     function.hasAnnotation<Subcommand>() -> {
                         val subcommand = function.findAnnotation<Subcommand>()!!
                         val name = subcommand.name.ifEmpty { function.name.lowercase() }
                         if (subcommand.group.isNotEmpty()) {
                             val group = subcommand.group
-                            val options = parseOptions(function, it, "$commandName.$group.$name")
-                            val subcommandData = SubcommandData(name, getDescription("$commandName.$group.$name"))
+                            val root = "$commandName.$group.$name"
+                            val options = parseOptions(function, it, root)
+                            val subcommandData = SubcommandData(name, getDescription(root))
                                 .addOptions(options)
                             subcommandGroups.firstOrNull { subcommandGroupData ->
                                 subcommandGroupData.name == subcommand.group
@@ -80,20 +80,18 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
                                 SubcommandGroupData(subcommand.group, getDescription("$commandName.$group"))
                                     .addSubcommands(subcommandData)
                             )
-                            root.children.getOrPut(commandName) { CommandNode() }
-                                .children.getOrPut(group) { CommandNode() }
-                                .children[name] = CommandNode(function, options.associate { optionData ->
+                            byKey[root] = function to options.map { optionData ->
                                 optionData.name to optionData.type
-                            })
+                            }
                         } else {
-                            val options = parseOptions(function, it, "$commandName.$name")
-                            val subcommandData = SubcommandData(name, getDescription("$commandName.$name"))
+                            val root = "$commandName.$name"
+                            val options = parseOptions(function, it, root)
+                            val subcommandData = SubcommandData(name, getDescription(root))
                                 .addOptions(options)
                             commandData.addSubcommands(subcommandData)
-                            root.children.getOrPut(commandName) { CommandNode() }
-                                .children[name] = CommandNode(function, options.associate { optionData ->
+                            byKey[root] = function to options.map { optionData ->
                                 optionData.name to optionData.type
-                            })
+                            }
                         }
                     }
                 }
@@ -120,25 +118,20 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
             when {
                 parameter.index == 0 -> require(classifier == command::class) { "How did we get here?" }
                 parameter.index == 1 -> require(classifier == SlashCommandEvent::class) {
-                    "Illegal argument: First parameter of function ${function.name} in class " +
-                            "${command::class.simpleName} must be of type SlashCommandEvent but is of type " +
-                            "${(classifier as KClass<*>).simpleName}!"
+                    "First parameter in function ${function.name} in class ${command::class.simpleName} must be of " +
+                            "type SlashCommandEvent but is of type ${(classifier as KClass<*>).simpleName}!"
                 }
                 parameter.index > 1 -> {
-                    require(classifier != SlashCommandEvent::class) {
-                        "Parameter ${parameter.name} in function ${function.name} in class " +
-                                "${command::class.simpleName} must not be of type SlashCommandEvent!"
-                    }
-                    require(parameter.hasAnnotation<CommandOption>()) {
+                    val commandOption = requireNotNull(parameter.findAnnotation<CommandOption>()) {
                         "Parameter ${parameter.name} in function ${function.name} in class " +
                                 "${command::class.simpleName} must be annotated with @CommandOption!"
                     }
-                    val type = optionTypes[classifier] ?: throw IllegalArgumentException(
+                    val type = requireNotNull(optionTypes[classifier]) {
                         "Parameter ${parameter.name} in function ${function.name} in class " +
                                 "${command::class.simpleName} must not be of type " +
                                 "${(classifier as KClass<*>).simpleName}!"
-                    )
-                    val name = parameter.findAnnotation<CommandOption>()!!.name.ifEmpty { parameter.name!!.lowercase() }
+                    }
+                    val name = commandOption.name.ifEmpty { parameter.name!!.lowercase() }
                     options.add(
                         OptionData(type, name, getDescription("$root.$name"), !parameter.type.isMarkedNullable)
                     )

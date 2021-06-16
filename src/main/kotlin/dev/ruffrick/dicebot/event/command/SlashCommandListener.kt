@@ -40,57 +40,35 @@ class SlashCommandListener(
             CommandScope.BOTH -> if (event.isFromGuild && !hasRequiredPermissions(command, event)) return
         }
 
-        var node = commandRegistry.root.children[event.name]
+        val key = when {
+            event.subcommandGroup != null -> "${event.name}.${event.subcommandGroup}.${event.subcommandName}"
+            event.subcommandName != null -> "${event.name}.${event.subcommandName}"
+            else -> event.name
+        }
+
+        val function = commandRegistry.byKey[key]
             ?: throw IllegalArgumentException(
                 "No command mapping found: " +
-                        "name='${event.name}', "
+                        "name='${event.name}', " +
+                        "subcommandGroup='${event.subcommandGroup}', " +
+                        "subcommandName='${event.subcommandName}'"
             )
-        if (event.subcommandGroup != null) {
-            node = node.children[event.subcommandGroup]
-                ?: throw IllegalArgumentException(
-                    "No subcommandGroup mapping found: " +
-                            "name='${event.name}', " +
-                            "subcommandGroup='${event.subcommandGroup}'"
-                )
-        }
-        if (event.subcommandName != null) {
-            node = node.children[event.subcommandName]
-                ?: throw IllegalArgumentException(
-                    "No subcommand mapping found: " +
-                            "name='${event.name}', " +
-                            "subcommandGroup='${event.subcommandGroup}'" +
-                            "subcommand='${event.subcommandName}'"
-                )
-        }
 
-        val args = mutableListOf<Any?>()
-        node.args?.forEach { (name, type) ->
+        val args = Array(function.second.size) {
+            val (name, type) = function.second[it]
             when (type) {
-                OptionType.STRING -> args.add(event.getStringOrNull(name))
-                OptionType.INTEGER -> args.add(event.getLongOrNull(name))
-                OptionType.BOOLEAN -> args.add(event.getBooleanOrNull(name))
-                OptionType.USER -> args.add(event.getUserOrNull(name))
-                OptionType.CHANNEL -> args.add(event.getChannelOrNull(name))
-                OptionType.ROLE -> args.add(event.getRoleOrNull(name))
-                else -> throw IllegalArgumentException("Invalid option: type='$type'")
+                OptionType.STRING -> event.getStringOrNull(name)
+                OptionType.INTEGER -> event.getLongOrNull(name)
+                OptionType.BOOLEAN -> event.getBooleanOrNull(name)
+                OptionType.USER -> event.getUserOrNull(name)
+                OptionType.CHANNEL -> event.getChannelOrNull(name)
+                OptionType.ROLE -> event.getRoleOrNull(name)
+                else -> throw IllegalArgumentException("Invalid option: name='$name', type='$type'")
             }
-        } ?: throw IllegalArgumentException(
-            "No command argument mapping found: " +
-                    "name='${event.name}', " +
-                    "subcommandGroup='${event.subcommandGroup}'" +
-                    "subcommand='${event.subcommandName}'" +
-                    "args='[${event.options.joinToString { it.name }}]'"
-        )
+        }
 
         val duration = measureTimeMillis {
-            node.function?.callSuspend(command, event, *args.toTypedArray())
-                ?: throw IllegalArgumentException(
-                    "No command function mapping found: " +
-                            "name='${event.name}', " +
-                            "subcommandGroup='${event.subcommandGroup}'" +
-                            "subcommand='${event.subcommandName}'" +
-                            "args='[${event.options.joinToString { it.name }}]'"
-                )
+            function.first.callSuspend(command, event, *args)
         }
         log.info(
             "Executed command: " +
