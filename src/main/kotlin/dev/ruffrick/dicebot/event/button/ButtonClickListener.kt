@@ -17,10 +17,10 @@ class ButtonClickListener(
         if (event !is ButtonClickEvent || (event.messageIdLong shr 22) + 1420070400000 < start) return
 
         val args = event.componentId.split('-')
-        if (args.size != 3) throw IllegalStateException("Invalid button: id='${event.componentId}'")
+        if (args.size != 3) throw IllegalArgumentException("Invalid button: id='${event.componentId}'")
 
         val command = commandRegistry.byName[args[0]]
-            ?: throw IllegalStateException("Invalid button: id='${event.componentId}'")
+            ?: throw IllegalArgumentException("Invalid button: id='${event.componentId}'")
 
         command.handle(event, args[1], args[2])
     }

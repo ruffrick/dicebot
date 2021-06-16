@@ -25,7 +25,7 @@ class SlashCommandListener(
         if (event !is SlashCommandEvent) return
 
         val command = commandRegistry.byName[event.name]
-            ?: throw IllegalStateException("Invalid command: name='${event.name}'")
+            ?: throw IllegalArgumentException("Invalid command: name='${event.name}'")
 
         when (command.scope) {
             CommandScope.GUILD -> {
@@ -41,16 +41,30 @@ class SlashCommandListener(
         }
 
         var node = commandRegistry.root.children[event.name]
-            ?: throw IllegalStateException("Invalid command: name='${event.name}'")
+            ?: throw IllegalArgumentException(
+                "No command mapping found: " +
+                        "name='${event.name}', "
+            )
         if (event.subcommandGroup != null) {
-            node = node.children[event.subcommandGroup]!!
+            node = node.children[event.subcommandGroup]
+                ?: throw IllegalArgumentException(
+                    "No subcommandGroup mapping found: " +
+                            "name='${event.name}', " +
+                            "subcommandGroup='${event.subcommandGroup}'"
+                )
         }
         if (event.subcommandName != null) {
-            node = node.children[event.subcommandName]!!
+            node = node.children[event.subcommandName]
+                ?: throw IllegalArgumentException(
+                    "No subcommand mapping found: " +
+                            "name='${event.name}', " +
+                            "subcommandGroup='${event.subcommandGroup}'" +
+                            "subcommand='${event.subcommandName}'"
+                )
         }
 
         val args = mutableListOf<Any?>()
-        node.args!!.forEach { (name, type) ->
+        node.args?.forEach { (name, type) ->
             when (type) {
                 OptionType.STRING -> args.add(event.getStringOrNull(name))
                 OptionType.INTEGER -> args.add(event.getLongOrNull(name))
@@ -60,15 +74,23 @@ class SlashCommandListener(
                 OptionType.ROLE -> args.add(event.getRoleOrNull(name))
                 else -> throw IllegalArgumentException("Invalid option: type='$type'")
             }
-        }
+        } ?: throw IllegalArgumentException(
+            "No command argument mapping found: " +
+                    "name='${event.name}', " +
+                    "subcommandGroup='${event.subcommandGroup}'" +
+                    "subcommand='${event.subcommandName}'" +
+                    "args='[${event.options.joinToString { it.name }}]'"
+        )
 
         val duration = measureTimeMillis {
-            val function = node.function!!
-            if (function.isSuspend) {
-                function.callSuspend(command, event, *args.toTypedArray())
-            } else {
-                function.call(command, event, *args.toTypedArray())
-            }
+            node.function?.callSuspend(command, event, *args.toTypedArray())
+                ?: throw IllegalArgumentException(
+                    "No command function mapping found: " +
+                            "name='${event.name}', " +
+                            "subcommandGroup='${event.subcommandGroup}'" +
+                            "subcommand='${event.subcommandName}'" +
+                            "args='[${event.options.joinToString { it.name }}]'"
+                )
         }
         log.info(
             "Executed command: " +
