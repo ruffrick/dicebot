@@ -46,7 +46,7 @@ class SlashCommandListener(
             else -> event.name
         }
 
-        val function = commandRegistry.byKey[key]
+        val (function, options) = commandRegistry.byKey[key]
             ?: throw IllegalArgumentException(
                 "No command mapping found: " +
                         "name='${event.name}', " +
@@ -54,8 +54,8 @@ class SlashCommandListener(
                         "subcommandName='${event.subcommandName}'"
             )
 
-        val args = Array(function.second.size) {
-            val (name, type) = function.second[it]
+        val args = Array(options.size) {
+            val (name, type) = options[it]
             when (type) {
                 OptionType.STRING -> event.getStringOrNull(name)
                 OptionType.INTEGER -> event.getLongOrNull(name)
@@ -68,7 +68,7 @@ class SlashCommandListener(
         }
 
         val duration = measureTimeMillis {
-            function.first.callSuspend(command, event, *args)
+            function.callSuspend(command, event, *args)
         }
         log.info(
             "Executed command: " +
