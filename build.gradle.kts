@@ -23,7 +23,6 @@ version = "1.0"
 repositories {
     mavenCentral()
     maven("https://m2.dv8tion.net/releases")
-    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -46,7 +45,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator:2.5.1")
 
     // https://github.com/DV8FromTheWorld/JDA/
-    implementation("net.dv8tion:JDA:4.3.0_278") {
+    implementation("net.dv8tion:JDA:4.3.0_280") {
         exclude("opus-java")
     }
 

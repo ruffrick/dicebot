@@ -27,7 +27,7 @@ class CommandRegistry(private val commands: List<SlashCommand>) {
 
     private val log = logger<CommandRegistry>()
     private val descriptions = Json.decodeFromString<Map<String, String>>(
-        this::class.java.getResourceAsStream("/lang/descriptions.json")?.bufferedReader()?.readText()
+        this::class.java.getResourceAsStream("/lang/descriptions.json")?.bufferedReader().use { it?.readText() }
             ?: throw IllegalArgumentException("Missing resource: path='/lang/descriptions.json'")
     )
     private val optionTypes = mapOf(

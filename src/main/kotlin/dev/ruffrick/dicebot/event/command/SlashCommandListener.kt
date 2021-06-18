@@ -5,7 +5,6 @@ import dev.ruffrick.dicebot.command.CommandScope
 import dev.ruffrick.dicebot.command.SlashCommand
 import dev.ruffrick.dicebot.event.AbstractListener
 import dev.ruffrick.dicebot.util.embed.DefaultEmbedBuilder
-import dev.ruffrick.dicebot.util.extension.*
 import dev.ruffrick.dicebot.util.logging.logger
 import net.dv8tion.jda.api.events.GenericEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
@@ -57,12 +56,12 @@ class SlashCommandListener(
         val args = Array(options.size) {
             val (name, type) = options[it]
             when (type) {
-                OptionType.STRING -> event.getStringOrNull(name)
-                OptionType.INTEGER -> event.getLongOrNull(name)
-                OptionType.BOOLEAN -> event.getBooleanOrNull(name)
-                OptionType.USER -> event.getUserOrNull(name)
-                OptionType.CHANNEL -> event.getChannelOrNull(name)
-                OptionType.ROLE -> event.getRoleOrNull(name)
+                OptionType.STRING -> event.getOption(name)?.asString
+                OptionType.INTEGER -> event.getOption(name)?.asLong
+                OptionType.BOOLEAN -> event.getOption(name)?.asBoolean
+                OptionType.USER -> event.getOption(name)?.asUser
+                OptionType.CHANNEL -> event.getOption(name)?.asGuildChannel
+                OptionType.ROLE -> event.getOption(name)?.asRole
                 else -> throw IllegalArgumentException("Invalid option: name='$name', type='$type'")
             }
         }
