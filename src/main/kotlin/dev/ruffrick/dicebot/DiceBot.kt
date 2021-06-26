@@ -1,8 +1,7 @@
 package dev.ruffrick.dicebot
 
-import dev.ruffrick.dicebot.command.CommandRegistry
 import dev.ruffrick.dicebot.config.Config
-import dev.ruffrick.dicebot.event.EventManager
+import dev.ruffrick.jda.commands.registerCommands
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder
 import net.dv8tion.jda.api.utils.ChunkingFilter
@@ -13,9 +12,7 @@ import org.springframework.stereotype.Service
 @Service
 class DiceBot(
     config: Config,
-    eventManager: EventManager,
-    httpClient: OkHttpClient,
-    commandRegistry: CommandRegistry
+    httpClient: OkHttpClient
 ) {
 
     final val shardManager = DefaultShardManagerBuilder
@@ -31,7 +28,6 @@ class DiceBot(
         .setHttpClient(httpClient)
         .setAutoReconnect(true)
         .setChunkingFilter(ChunkingFilter.NONE)
-        .setEventManagerProvider { eventManager }
         .disableCache(
             CacheFlag.ACTIVITY,
             CacheFlag.VOICE_STATE,
@@ -43,8 +39,6 @@ class DiceBot(
         )
         .build()
 
-    init {
-        commandRegistry.updateCommands(shardManager)
-    }
+    final val commandRegistry = shardManager.registerCommands("dev.ruffrick.dicebot.command")
 
 }

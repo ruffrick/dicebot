@@ -1,7 +1,6 @@
 package dev.ruffrick.dicebot.rest
 
 import dev.ruffrick.dicebot.DiceBot
-import dev.ruffrick.dicebot.command.CommandRegistry
 import dev.ruffrick.dicebot.util.task.TaskManager
 import kotlinx.coroutines.delay
 import net.dv8tion.jda.api.OnlineStatus
@@ -15,9 +14,7 @@ import kotlin.system.exitProcess
 
 @RestController
 class DebugController(
-    private val diceBot: DiceBot,
-    private val taskManager: TaskManager,
-    private val commandRegistry: CommandRegistry
+    private val diceBot: DiceBot
 ) {
 
     private val debugStates = mutableMapOf<Long, Boolean>()
@@ -31,7 +28,7 @@ class DebugController(
             diceBot.shardManager.setStatus(OnlineStatus.DO_NOT_DISTURB)
             diceBot.shardManager.setActivity(Activity.playing("Shutting down"))
             diceBot.shardManager.shutdown()
-            taskManager.async {
+            TaskManager.launch {
                 delay(5000)
                 exitProcess(0)
             }
@@ -56,7 +53,7 @@ class DebugController(
                 it.updateCommands().queue()
                 debugStates[it.idLong] = false
             } else {
-                commandRegistry.updateCommands(it)
+                diceBot.commandRegistry.updateCommands(it)
                 debugStates[it.idLong] = true
             }
         }

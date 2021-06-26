@@ -1,10 +1,13 @@
-package dev.ruffrick.dicebot.command.utility
+package dev.ruffrick.dicebot.command
 
-import dev.ruffrick.dicebot.command.*
 import dev.ruffrick.dicebot.util.embed.DefaultEmbedBuilder
+import dev.ruffrick.jda.commands.BaseCommand
+import dev.ruffrick.jda.commands.Command
+import dev.ruffrick.jda.commands.CommandOption
+import dev.ruffrick.jda.commands.SlashCommand
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 
-@Command(category = CommandCategory.UTILITY)
+@Command
 class HelpCommand : SlashCommand() {
 
     @BaseCommand
@@ -13,15 +16,15 @@ class HelpCommand : SlashCommand() {
         @CommandOption(name = "command") name: String?
     ) {
         if (name != null) {
-            val command = commandRegistry.byName[name.lowercase()] ?: return event.replyEmbeds(
+            val command = commandRegistry.commandsByName[name.lowercase()] ?: return event.replyEmbeds(
                 DefaultEmbedBuilder()
                     .setDescription("\uD83D\uDE15 Unknown command. Use `/help` to view a list of available commands")
                     .build()
             ).setEphemeral(true).queue()
             return event.replyEmbeds(
                 DefaultEmbedBuilder()
-                    .setTitle("${command.category.emoji} /${command.commandData.name}")
-                    .setDescription("")
+                    .setTitle("/${command.commandData.name}")
+                    .setDescription(command.commandData.description)
                     .addField(
                         "Required arguments",
                         command.commandData.options.filter { it.isRequired }
@@ -39,13 +42,11 @@ class HelpCommand : SlashCommand() {
                     .build()
             ).setEphemeral(true).queue()
         }
-        val embedBuilder = DefaultEmbedBuilder()
-            .setTitle("\uD83D\uDCA1 Available commands:")
-            .setFooter("[] required | <> optional")
-        commandRegistry.byCategory.forEach { entry ->
-            embedBuilder.addField(
-                "${entry.key.emoji} **${entry.key.effectiveName}**",
-                entry.value.joinToString("\n") { command ->
+
+        event.replyEmbeds(
+            DefaultEmbedBuilder()
+                .setTitle("\uD83D\uDCA1 Available commands:")
+                .setDescription(commandRegistry.commandsByName.values.joinToString("\n") { command ->
                     "`/${command.commandData.name}${
                         command.commandData.options.joinToString("") {
                             if (it.isRequired) {
@@ -55,11 +56,10 @@ class HelpCommand : SlashCommand() {
                             }
                         }
                     }`"
-                },
-                false
-            )
-        }
-        event.replyEmbeds(embedBuilder.build()).setEphemeral(true).queue()
+                })
+                .setFooter("[] required | <> optional")
+                .build()
+        ).setEphemeral(true).queue()
     }
 
 }

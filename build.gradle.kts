@@ -23,6 +23,7 @@ version = "1.0"
 repositories {
     mavenCentral()
     maven("https://m2.dv8tion.net/releases")
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -35,9 +36,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
 
-    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
-
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
     implementation("org.springframework.boot:spring-boot-starter-web:2.5.1")
 
@@ -48,6 +46,9 @@ dependencies {
     implementation("net.dv8tion:JDA:4.3.0_280") {
         exclude("opus-java")
     }
+
+    // https://github.com/ruffrick/jda-commands
+    implementation("com.github.ruffrick:jda-commands:266f445")
 
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
     implementation("org.apache.logging.log4j:log4j-api:2.14.1")

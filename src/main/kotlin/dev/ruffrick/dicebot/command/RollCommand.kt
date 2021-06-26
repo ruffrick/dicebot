@@ -1,14 +1,14 @@
-package dev.ruffrick.dicebot.command.roll
+package dev.ruffrick.dicebot.command
 
-import dev.ruffrick.dicebot.command.*
 import dev.ruffrick.dicebot.util.embed.DefaultEmbedBuilder
+import dev.ruffrick.jda.commands.*
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent
 import net.dv8tion.jda.api.interactions.components.Button
 import kotlin.random.Random
 
-@Command(category = CommandCategory.ROLL)
+@Command
 class RollCommand : SlashCommand() {
 
     private val pattern = Regex("^(\\d*)[dD](\\d+)\$").toPattern()
@@ -22,7 +22,16 @@ class RollCommand : SlashCommand() {
         @CommandOption gm: Boolean?
     ) {
         try {
-            val roll = parse(dice, modifier, gm)
+            val matcher = pattern.matcher(dice)
+            require(matcher.matches()) { "Please enter the dice you want to roll, e. g. `1d20` or `4d8`!" }
+            val count = matcher.group(1).toIntOrNull() ?: 1
+            require(count >= 1) { "You can't roll less than one die!" }
+            require(count <= 8) { "You can't roll more than eight dice!" }
+            val die = matcher.group(2).toInt()
+            require(die >= 4) { "Your dice can't have less than four faces!" }
+            require(die <= 120) { "Your dice can't have more than 120 faces!" }
+            if (modifier != null) require(modifier >= 1) { "Your modifier can't be less than one!" }
+            val roll = Roll(die, count, modifier, gm ?: false)
             rolls[event.user.idLong] = roll
             event.replyEmbeds(DefaultEmbedBuilder().setDescription("\uD83C\uDFB2 $roll").build())
                 .addActionRow(
@@ -48,19 +57,6 @@ class RollCommand : SlashCommand() {
             )
             .setEphemeral(roll.gm)
             .queue()
-    }
-
-    private fun parse(dice: String, modifier: Long?, gm: Boolean?): Roll {
-        val matcher = pattern.matcher(dice)
-        require(matcher.matches()) { "Please enter the dice you want to roll, e. g. `1d20` or `4d8`!" }
-        val count = matcher.group(1).toIntOrNull() ?: 1
-        require(count >= 1) { "You can't roll less than one die!" }
-        require(count <= 8) { "You can't roll more than eight dice!" }
-        val die = matcher.group(2).toInt()
-        require(die >= 4) { "Your dice can't have less than four faces!" }
-        require(die <= 120) { "Your dice can't have more than 120 faces!" }
-        if (modifier != null) require(modifier >= 1) { "Your modifier can't be less than one!" }
-        return Roll(die, count, modifier, gm ?: false)
     }
 
     private data class Roll(
