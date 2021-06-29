@@ -1,6 +1,6 @@
 package dev.ruffrick.dicebot.command
 
-import dev.ruffrick.dicebot.util.embed.DefaultEmbedBuilder
+import dev.ruffrick.dicebot.util.DefaultEmbedBuilder
 import dev.ruffrick.jda.commands.*
 import net.dv8tion.jda.api.entities.Emoji
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent

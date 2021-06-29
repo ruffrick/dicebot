@@ -1,8 +1,9 @@
 package dev.ruffrick.dicebot.rest
 
 import dev.ruffrick.dicebot.DiceBot
-import dev.ruffrick.dicebot.util.task.TaskManager
+import dev.ruffrick.jda.kotlinx.event.EventScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.OnlineStatus
 import net.dv8tion.jda.api.entities.Activity
 import org.springframework.http.HttpStatus
@@ -28,7 +29,7 @@ class DebugController(
             diceBot.shardManager.setStatus(OnlineStatus.DO_NOT_DISTURB)
             diceBot.shardManager.setActivity(Activity.playing("Shutting down"))
             diceBot.shardManager.shutdown()
-            TaskManager.launch {
+            EventScope.launch {
                 delay(5000)
                 exitProcess(0)
             }

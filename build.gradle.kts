@@ -27,34 +27,22 @@ repositories {
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
-    implementation(kotlin("stdlib"))
-
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-reflect
     implementation(kotlin("reflect"))
-
-    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
 
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
     implementation("org.springframework.boot:spring-boot-starter-web:2.5.1")
 
-    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator
-    implementation("org.springframework.boot:spring-boot-starter-actuator:2.5.1")
-
     // https://github.com/DV8FromTheWorld/JDA/
-    implementation("net.dv8tion:JDA:4.3.0_280") {
+    implementation("net.dv8tion:JDA:4.3.0_287") {
         exclude("opus-java")
     }
 
     // https://github.com/ruffrick/jda-commands
-    implementation("com.github.ruffrick:jda-commands:266f445")
+    implementation("com.github.ruffrick:jda-commands:ce6c1db")
 
-    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
-    implementation("org.apache.logging.log4j:log4j-api:2.14.1")
-
-    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
-    implementation("org.apache.logging.log4j:log4j-core:2.14.1")
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    implementation("ch.qos.logback:logback-classic:1.2.3")
 
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-configuration-processor
     kapt("org.springframework.boot:spring-boot-configuration-processor:2.5.1")

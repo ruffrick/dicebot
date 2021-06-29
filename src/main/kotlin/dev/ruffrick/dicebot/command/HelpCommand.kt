@@ -1,6 +1,6 @@
 package dev.ruffrick.dicebot.command
 
-import dev.ruffrick.dicebot.util.embed.DefaultEmbedBuilder
+import dev.ruffrick.dicebot.util.DefaultEmbedBuilder
 import dev.ruffrick.jda.commands.BaseCommand
 import dev.ruffrick.jda.commands.Command
 import dev.ruffrick.jda.commands.CommandOption

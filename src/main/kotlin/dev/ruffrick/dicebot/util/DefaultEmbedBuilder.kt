@@ -1,4 +1,4 @@
-package dev.ruffrick.dicebot.util.embed
+package dev.ruffrick.dicebot.util
 
 import net.dv8tion.jda.api.EmbedBuilder
 import java.awt.Color

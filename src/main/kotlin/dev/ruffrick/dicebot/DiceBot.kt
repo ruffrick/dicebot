@@ -2,6 +2,7 @@ package dev.ruffrick.dicebot
 
 import dev.ruffrick.dicebot.config.Config
 import dev.ruffrick.jda.commands.registerCommands
+import dev.ruffrick.jda.kotlinx.useSuspendEventManager
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder
 import net.dv8tion.jda.api.utils.ChunkingFilter
@@ -28,6 +29,7 @@ class DiceBot(
         .setHttpClient(httpClient)
         .setAutoReconnect(true)
         .setChunkingFilter(ChunkingFilter.NONE)
+        .useSuspendEventManager()
         .disableCache(
             CacheFlag.ACTIVITY,
             CacheFlag.VOICE_STATE,
