@@ -41,6 +41,6 @@ class DiceBot(
         )
         .build()
 
-    final val commandRegistry = shardManager.registerCommands("dev.ruffrick.dicebot.command")
+    final val commandRegistry = shardManager.registerCommands("dev.ruffrick.dicebot")
 
 }

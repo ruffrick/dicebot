@@ -39,7 +39,7 @@ dependencies {
     }
 
     // https://github.com/ruffrick/jda-commands
-    implementation("com.github.ruffrick:jda-commands:ce6c1db")
+    implementation("com.github.ruffrick:jda-commands:f43ff07")
 
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     implementation("ch.qos.logback:logback-classic:1.2.3")
